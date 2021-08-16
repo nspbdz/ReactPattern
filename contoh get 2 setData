@@ -1,0 +1,60 @@
+import { useContext,useState,useEffect } from "react"
+import { API } from "../config/api";
+import axios from 'axios';
+import { useHistory,Router,Link } from "react-router-dom";
+
+function Profile() {
+  
+  const [loading, setLoading] = useState(true);
+  const [loadingTransaction, setLoadingTransaction] = useState(false);
+   
+  const [dataTransaction, setDataTransaction] = useState(null);
+  const [dataProfile, setDataProfile] = useState(null);
+  var token= localStorage.getItem("token")
+
+  const getTransactions = async () => {
+    const config = {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " +token,
+            },
+          };
+        const response = await API.get("/mytransaction", config);
+      console.log(response);
+      setDataTransaction(response.data.data.transactions);
+      setDataProfile(response.data.data.users);
+      setLoadingTransaction(false);
+    };
+
+    useEffect(() => {
+      getTransactions();
+      
+    }, []);
+//  console.log(data)
+ console.log(dataProfile)
+ 
+
+
+// if (loading) return <p>loading...</p>;
+console.log(dataTransaction)
+
+
+
+  return (
+   
+    </>
+  )
+}
+
+export default Profile;
+
+
+// isi  import { API } from "../config/api";
+//tempat src/config/api
+import axios from 'axios';
+
+export const API = axios.create({
+  baseURL: "http://localhost:5000/api/v1"
+
+})
+
