@@ -1,0 +1,31 @@
+import { API } from "../config/api";
+import axios from 'axios';
+
+const [loadingTransaction, setLoadingTransaction] = useState(false);
+const [dataTransaction, setDataTransaction] = useState(null);//for dataTransaction
+const [dataProfile, setDataProfile] = useState(null);//for dataProfile
+
+const WAIT_TIME = 3000; // waktu re render
+
+
+ const getTransactions = async () => {
+    const config = {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " +token,
+            },
+          };
+    const response = await API.get("/mytransaction", config);
+      console.log(response);
+      setDataTransaction(response.data.data.transactions);
+      setDataProfile(response.data.data.users);
+      setLoadingTransaction(false);
+    };
+
+          useEffect(() => { //re render every WAIT_TIME
+            const id = setInterval(() => {
+            getTransactions();
+            
+            }, WAIT_TIME);
+            return () => clearInterval(id);
+          }, []); 
