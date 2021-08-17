@@ -1,0 +1,193 @@
+import { useContext,useState,useEffect } from "react"
+import {UserContext} from "../contexts/userContext";
+import { Card,Jumbotron,Row,Col,Button,Form } from "react-bootstrap";
+import { BsPeopleCircle,BsEnvelope,BsLock,BsFillHouseFill,BsGeoAlt } from 'react-icons/bs';
+import { FaTransgender,FaPhone } from 'react-icons/fa';
+import ModalChangePassword from '../components/ModalChangePassword'
+import { API } from "../config/api";
+import OrderList from "../components/OrderList";
+import ProfileList from "../components/ProfileList";
+import axios from 'axios';
+import { useHistory,Router,Link } from "react-router-dom";
+import { useQuery } from "react-query";
+function Profile() {
+  const WAIT_TIME = 3000;
+
+  const router = useHistory();
+  
+  const {state} = useContext(UserContext);
+  const contextValue = useContext(UserContext);
+  const userlogin=contextValue[0].user.username
+  const userid=contextValue[0].user.id
+  const [loading, setLoading] = useState(true);
+  const [loadingTransaction, setLoadingTransaction] = useState(false);
+  
+  const [dataUpdate, setDataUpdate] = useState([])
+  
+  // const [dataUser, setDataUser] = useState(null);
+  const [dataTransaction, setDataTransaction] = useState(null);
+  const [dataProfile, setDataProfile] = useState(null);
+  const [preview, setPreview] = useState(null); //For image preview
+  var token= localStorage.getItem("token")
+
+  const getTransactions = async () => {
+    const config = {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " +token,
+            },
+          };
+        const response = await API.get("/mytransaction", config);
+      console.log(response);
+      setDataTransaction(response.data.data.transactions);
+      setDataProfile(response.data.data.users);
+      setLoadingTransaction(false);
+    };
+
+    // useEffect(() => {
+    //   getTransactions();
+      
+    // }, []);
+    useEffect(() => {
+      const id = setInterval(() => {
+      getTransactions();
+       
+      }, WAIT_TIME);
+      return () => clearInterval(id);
+    }, []); 
+//  console.log(data)
+ console.log(dataProfile)
+ 
+
+
+// if (loading) return <p>loading...</p>;
+console.log(dataTransaction)
+
+const handleUpdateProfile = async (e) => {
+  e.preventDefault();
+  console.log("clicked")
+  
+  // try {
+    const formData = new FormData();
+    formData.append("imageFile", dataUpdate.imageFile, dataUpdate.imageFile.name);
+    axios({
+      method: "patch",
+      url: "http://localhost:5000/api/v1/user",
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data",Authorization: "Bearer " +token, },
+    })
+      .then(function (response) {
+        //handle success
+        alert("berhasil update foto")
+        router.push("/");
+        console.log(response);
+      })
+      .catch(function (response) {
+        //handle error
+        console.log(response);
+      });
+    }
+  
+    const handleChange = (e) => {
+      console.log(e.target.value)
+      setDataUpdate({
+        ...dataUpdate,
+        [e.target.name]:
+          e.target.type === "file" ? e.target.files[0] : e.target.value,
+      });
+       // Create image url for preview
+    if (e.target.type === "file") {
+      setPreview(e.target.files);
+    }
+    };
+    console.log(preview)
+    
+    const handleSubmit = async (e) => {
+      try {
+        e.preventDefault();
+        
+        // Data body
+        const formData = new FormData();
+      if (preview) {
+        formData.set("imageFile", preview[0], preview[0]?.name);
+        console.log(formData)
+
+      }
+
+        // Configuration
+        const config = {
+          
+          method: "patch",
+         headers: { "Content-Type": "multipart/form-data",Authorization: "Bearer " +token, },
+         body: formData,
+
+          // body,
+        };
+        console.log(config)
+        // Insert category data
+        alert("berhasil update foto")
+        await API.patch("/user" ,formData, config);
+        // router.push("/profile");
+
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  return (
+    <>
+     <div>
+     <Row >
+    <Col >
+      <>
+        <ProfileList data={dataProfile} />
+      <div style={{marginTop:"10px"}}>
+        
+     <Form onSubmit={handleSubmit}  >
+     {/* <Form> */}
+        <Form.Group>
+          
+          <Form.Control
+            name="imageFile"
+            type="file"
+          onChange={handleChange}
+            required
+          />
+        </Form.Group>
+        
+        <Button type="submit" style={{width:"213px",height:"50px",backgroundColor:"#613D2B"}} >
+          choose your photo
+        </Button>
+        {/* <Button onClick={handleUpdateProfile} style={{width:"213px",height:"50px",backgroundColor:"#613D2B"}} >
+          choose your photo
+        </Button> */}
+        
+      </Form>
+      </div>
+      </>
+        
+    </Col>
+    <Col xs={1}></Col>
+  <Col xs={6}  >
+    <>
+    <h4 style={{paddingTop:"70px"}}>My Transaction</h4>
+
+   <OrderList data={dataTransaction} loading={loading}  />
+   </>
+    </Col>
+
+     </Row>
+  </div>
+    
+    </>
+  )
+}
+
+export default Profile;
+//isi api.js
+//import axios from 'axios';
+
+//export const API = axios.create({
+  //baseURL: "http://localhost:5000/api/v1"
+//
+//})
